@@ -17,7 +17,7 @@ function createIcon(filename, isActive) {
   ctx.font = 'bold 48px Arial';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('¼ì', size / 2, size / 2 - 8);
+  ctx.fillText('ï¿½ï¿½', size / 2, size / 2 - 8);
   
   const dotX = size - 24;
   const dotY = 24;
@@ -39,5 +39,5 @@ function createIcon(filename, isActive) {
   console.log(`Created ${filename}`);
 }
 
-createIcon('icon-inactive.png', false);
-createIcon('icon-active.png', true);
+createIcon('../icons/icon-inactive.png', false);
+createIcon('../icons/icon-active.png', true);

@@ -30,7 +30,7 @@ function findTargetIframe(iframes, title) {
 
 // ============ 图标更新 ============
 function setIcon(active) {
-  const iconPath = active ? 'icon-active.png' : 'icon-inactive.png';
+  const iconPath = active ? 'icons/icon-active.png' : 'icons/icon-inactive.png';
   chrome.action.setIcon({ path: { 128: iconPath } });
 }
 
