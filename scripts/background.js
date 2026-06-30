@@ -21,10 +21,17 @@ let targetTitle = DEFAULT_TITLE;
 function findTargetIframe(iframes, title) {
   const matchTitle = title || targetTitle || DEFAULT_TITLE;
   if (!iframes || iframes.length === 0) return -1;
-  // 只精确匹配 title
+  // 优先：精确匹配 title 且包含表格
   let idx = iframes.findIndex(f => f.title === matchTitle && f.hasTable);
   if (idx !== -1) return idx;
+  // 其次：精确匹配 title
   idx = iframes.findIndex(f => f.title === matchTitle);
+  if (idx !== -1) return idx;
+  // 再次：包含匹配且有表格
+  idx = iframes.findIndex(f => f.title && f.title.indexOf(matchTitle) !== -1 && f.hasTable);
+  if (idx !== -1) return idx;
+  // 最后：包含匹配
+  idx = iframes.findIndex(f => f.title && f.title.indexOf(matchTitle) !== -1);
   return idx;
 }
 
