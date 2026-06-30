@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>调车计划检查工具</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <!-- iframe 列表 -->
+    <div id="iframeSection" class="iframe-section" style="display:none;">
+      <h3 class="iframe-title">iframe列表</h3>
+      <div id="iframeList" class="iframe-list"></div>
+    </div>
+    
+    <!-- 目标 iframe 标题匹配 -->
+    <div class="target-title-row">
+      <span class="target-title-label">匹配标题:</span>
+      <input id="targetTitleInput" class="target-title-input" type="text" placeholder="调车计划分析系统" spellcheck="false">
+    </div>
+    
+    <div class="button-group">
+      <button id="checkBtn" class="btn btn-primary">
+        <span class="btn-icon">🔍</span>
+        开始检查
+      </button>
+      <label class="switch-label" style="display:inline-flex;flex-direction:column;align-items:center;gap:4px;margin-left:10px;cursor:pointer;">
+        <label class="switch">
+          <input type="checkbox" id="monitorSwitch">
+          <span class="slider"></span>
+        </label>
+        <span class="switch-text" style="font-size:11px;color:#00bfff;">自动监测</span>
+      </label>
+    </div>
+    <div id="logSection" class="log-section">
+      <h3 class="log-title">检查日志</h3>
+      <div id="logContent" class="log-content"></div>
+    </div>
+  </div>
+  <script src="main.js"></script>
+</body>
+</html>

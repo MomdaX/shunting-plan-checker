@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "Shunting Plan Inspector",
+  "version": "1.0.0",
+  "description": "Auto-check shunting work notice",
+  "permissions": ["activeTab", "scripting", "storage", "alarms", "tabs"],
+  "action": {
+    "default_popup": "index.html",
+    "default_icon": {
+      "128": "icon-inactive.png"
+    }
+  },
+  "icons": {
+    "128": "icon-active.png"
+  },
+  "content_scripts": [{"matches": ["<all_urls>"], "js": ["content.js"], "run_at": "document_idle"}],
+  "background": {"service_worker": "background.js"}
+}
