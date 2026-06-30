@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta charset="UTF-8">
+    <title>调车计划分析系统</title>
+    <style>
+        body{margin:0;padding:0;background:-ms-linear-gradient(135deg,#0c0c0c 0%,#1a1a2e 50%,#16213e 100%);background:linear-gradient(135deg,#0c0c0c 0%,#1a1a2e 50%,#16213e 100%);color:#e0e0e0;font-family:'Arial',sans-serif;overflow-x:hidden;}
+        #particles-container{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+        .container{position:relative;z-index:1;max-width:880px;margin:20px auto;padding:10px;background:rgba(255,255,255,0.05);border-radius:12px;border:1px solid rgba(255,255,255,0.1);box-shadow:0 8px 32px rgba(0,0,0,0.3);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);animation:containerGlow 3s ease-in-out infinite alternate;}
+        @keyframes containerGlow{from{box-shadow:0 8px 32px rgba(0,0,0,0.3),0 0 0 0 rgba(0,191,255,0.1);border-color:rgba(255,255,255,0.1);}
+        to{box-shadow:0 8px 32px rgba(0,0,0,0.3),0 0 20px 0 rgba(0,191,255,0.3);border-color:rgba(0,191,255,0.3);}
+        }.container:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,0.4),0 0 30px 0 rgba(0,191,255,0.4);transition:transform 0.3s ease,box-shadow 0.3s ease;}
+        title{color:#00bfff;text-shadow:0 0 10px rgba(0,191,255,0.5);}
+        /* 默认主题 */
+        table{border-collapse:collapse;background:transparent;border-radius:8px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.2);}
+        td,th{border:1px solid rgba(255,255,255,0.1);padding:1px;
+        /* 移除主题切换时的过渡效果 */
+        }
+        tr:hover td{background:rgba(0,191,255,0.1);box-shadow:inset 0 0 10px rgba(0,191,255,0.2);transition:background 0.3s ease,box-shadow 0.3s ease;}
+        /* 毛玻璃主题 */
+        body.glass-theme{color:#ffffff !important;}
+        body.glass-theme .container{background:rgba(62,62,85,0.5);border-color:rgba(100,150,255,0.2);}
+        body.glass-theme table{backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);background:rgba(25,25,35,0.4);box-shadow:0 4px 20px rgba(0,0,0,0.25);}
+        body.glass-theme td,body.glass-theme th{background-color:rgba(40,40,50,0.3) !important;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-color:rgba(100,150,255,0.25);color:#ffffff !important;text-shadow:0 0 2px rgba(0,0,0,0.3);}
+        body.glass-theme th{background-color:rgba(60,60,80,0.4) !important;font-weight:bold;color:#f0f8ff !important;}
+        body.glass-theme tr:hover td{background:rgba(100,150,255,0.15) !important;box-shadow:inset 0 0 15px rgba(100,150,255,0.2);}
+        body.glass-theme tr[tridx="5"]{background:rgba(100,150,255,0.2) !important;}
+        body.glass-theme tr[tridx="5"] td{border-color:rgba(100,150,255,0.4) !important;}
+        body.glass-theme .mark-symbol{color:#ff6b6b !important;}
+        /* 主题切换按钮 */
+        .theme-toggle-btn{position:absolute;top:20px;right:10px;padding:20px 10px;background:rgba(255,255,255,0.1);border:2px solid rgba(255,255,255,0.2);border-radius:20px;color:#ffffff;font-size:18px;cursor:pointer;transition:all 0.3s ease;z-index:1000;writing-mode:vertical-rl;text-orientation:upright;}
+        .theme-toggle-btn:hover{background:rgba(255,255,255,0.2);transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.3);}
+        /* 审核结果容器 */
+        #auditResultContainer{position: absolute; top: 153px; right: 10px; padding: 10px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); border-radius: 0 10px 10px 0; backdrop-filter: blur(10px); z-index: 999; writing-mode: vertical-rl; line-height: 30px;}
+        /* 其他样式 */
+        .mark-symbol{color:#f00;font-weight:bold;font-size:15px;margin-left:5px;}
+        .mark-complete-cancel{position:relative;display:inline;}
+        .mark-complete-cancel .strike-line{position:absolute;top:40%;left:0;width:100%;height:5px;background-color:red;z-index:1;display:block;}
+        .fh.tac.bw.f16-0.pl2.sel.br0.bbw1.bbsda.bbcb.bl0.bt0{text-align:center;font-weight:bold;font-size:26px;}
+        .bbw1.bbsda.bbcb{padding:3px 0 2px;border-bottom:2px dashed #000;}
+        .tac{text-align:center;}
+        tr[tridx="5"]{font-size:16px !important;font-weight:bold !important;}
+        tr[tridx="5"] td{border-top:2px dashed #000 !important;padding:3px !important;}
+        .report-background{top:0 !important;left:50px !important;}
+        /* 容器高度自适应 */
+        .pageContentDIV,.paper-background,.report-background,.page-block{height:auto !important;position:relative !important;width:auto !important;}
+        /* 确保容器能随表格高度变化 */
+        .container{display:block;min-height:auto;}
+        /* 表格高度自适应 */
+        table{width:100%;}
+        /* 列宽设置 */
+        col[col="2"]{width:50px !important;}
+        col[col="5"]{width:40px !important;}
+        col[col="7"]{width:450px !important;}
+        /* 将paper-background的背景色设置为透明 */
+        .paper-background{background-color:transparent !important;}
+    </style>
+</head>
+
+<body>
+    <div id="particles-container"></div>
+    <div class="container"> 
+        <button class="theme-toggle-btn" id="themeToggle">切换主题</button>
+        <div id="auditResultContainer"></div>
+		
+		<div class="pageContentDIV main-content-left" style="width:566px;height:1965px;">
+			<div class="paper-background" style="background-color:rgb(255,255,255);top:0;left:0;width:566.0px;position:absolute;height:1965.0px;">
+				<div class="report-background" style="top:25.0px;left:72.0px;position:absolute;">
+					<div class="page-block" style="top:0px;left:0px;width:412px;position:absolute;height:806px;">
+						<table class="x-table" style="left:0px;table-layout:fixed;width:411px;position:relative;"
+						cellSpacing="0" id="6224" cellPadding="0">
+							<colgroup>
+								<col style="width:57px;" col="1" />
+								<col style="width:72px;" col="2" />
+								<col style="width:59px;" col="3" />
+								<col style="width:37px;" col="4" />
+								<col style="width:38px;" col="5" />
+								<col style="width:76px;" col="6" />
+								<col style="width:72px;" col="7" />
+							</colgroup>
+							<tbody class="rows-height-counter">
+								<tr style="height:19px;" tridx="0" id="r&#45;0&#45;0">
+									<td style="display:none;" id="A1&#45;0&#45;6224">
+									</td>
+									<td class="fh bw pl2 sel b0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);font-family:'simhei';"
+									id="B1&#45;0&#45;6224">
+									</td>
+									<td class="fh bw pl2 sel b0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);font-family:'simhei';"
+									id="C1&#45;0&#45;6224">
+									</td>
+									<td class="fh bw pl2 sel b0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);font-family:'simhei';"
+									id="D1&#45;0&#45;6224">
+									</td>
+									<td class="fh bw pl2 sel b0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);font-family:'simhei';"
+									id="E1&#45;0&#45;6224">
+									</td>
+									<td class="fh bw pl2 sel b0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);font-family:'simhei';"
+									id="F1&#45;0&#45;6224">
+									</td>
+									<td class="fh bw pl2 sel b0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);font-family:'simhei';"
+									id="G1&#45;0&#45;6224">
+									</td>
+									<td class="fh bw pl2 sel b0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);font-family:'simhei';"
+									id="H1&#45;0&#45;6224">
+									</td>
+								</tr>
+								<tr style="height:60px;" tridx="1" id="r&#45;1&#45;0">
+									<td style="display:none;" id="A2&#45;0&#45;6224">
+									</td>
+									<td class="fh tac bw f16-0 pl2 sel br0 bbw1 bbsda bbcb bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);font-family:'simhei';"
+									colSpan="7" id="B2&#45;0&#45;6224">
+										调车作业通知单
+									</td>
+								</tr>
+								<tr style="height:19px;" tridx="2" id="r&#45;2&#45;0">
+									<td style="display:none;" id="A3&#45;0&#45;6224">
+									</td>
+									<td class="fh bw pl2 sel b0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);font-family:'simhei';"
+									colSpan="7" id="B3&#45;0&#45;6224">
+										第 （A008）号 &nbsp;&nbsp;&nbsp; 班次：
+									</td>
+								</tr>
+								<tr style="height:19px;" tridx="3" id="r&#45;3&#45;0">
+									<td style="display:none;" id="A4&#45;0&#45;6224">
+									</td>
+									<td class="fh bw pl2 sel b0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);font-family:'simhei';"
+									colSpan="7" id="B4&#45;0&#45;6224">
+										（1）号调机（）次（）道列车
+									</td>
+								</tr>
+								<tr style="height:19px;" tridx="4" id="r&#45;4&#45;0">
+									<td style="display:none;" id="A5&#45;0&#45;6224">
+									</td>
+									<td class="fh bw pl2 sel b0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);font-family:'simhei';"
+									colSpan="7" id="B5&#45;0&#45;6224">
+										开始： &nbsp;&nbsp; 终了：
+									</td>
+								</tr>
+								<tr style="height:19px;" tridx="5" id="r&#45;5&#45;0">
+									<td style="display:none;" id="A6&#45;0&#45;6224">
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbsda bbcb bl0 btw1 btsda btcb"
+									style="background-color:rgb(255,255,255);color:rgb(0,0,0);font-family:'simhei';"
+									id="B6&#45;0&#45;6224">
+										顺号
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbsda bbcb bl0 btw1 btsda btcb"
+									style="background-color:rgb(255,255,255);color:rgb(0,0,0);font-family:'simhei';"
+									id="C6&#45;0&#45;6224">
+										作业项目
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbsda bbcb bl0 btw1 btsda btcb"
+									style="background-color:rgb(255,255,255);color:rgb(0,0,0);font-family:'simhei';"
+									id="D6&#45;0&#45;6224">
+										股道
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbsda bbcb bl0 btw1 btsda btcb"
+									style="background-color:rgb(255,255,255);color:rgb(0,0,0);font-family:'simhei';"
+									id="E6&#45;0&#45;6224">
+										+/-
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbsda bbcb bl0 btw1 btsda btcb"
+									style="background-color:rgb(255,255,255);color:rgb(0,0,0);font-family:'simhei';"
+									id="F6&#45;0&#45;6224">
+										车数
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbsda bbcb bl0 btw1 btsda btcb"
+									style="background-color:rgb(255,255,255);color:rgb(0,0,0);font-family:'simhei';"
+									id="G6&#45;0&#45;6224">
+										车号
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbsda bbcb bl0 btw1 btsda btcb"
+									style="background-color:rgb(255,255,255);color:rgb(0,0,0);font-family:'simhei';"
+									id="H6&#45;0&#45;6224">
+										备注
+									</td>
+								</tr>
+								<tr style="height:27px;" tridx="6" id="r&#45;6&#45;0">
+									<td style="display:none;" id="A7&#45;0&#45;6224">
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="B7&#45;0&#45;6224">
+										1
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="C7&#45;0&#45;6224">
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="D7&#45;0&#45;6224">
+										1
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="E7&#45;0&#45;6224">
+										+
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="F7&#45;0&#45;6224">
+										0
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="G7&#45;0&#45;6224">
+									</td>
+									<td class="fh bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="H7&#45;0&#45;6224">
+									</td>
+								</tr>
+								<tr style="height:27px;" tridx="7" id="r&#45;7&#45;0">
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="B8&#45;0&#45;6224">
+										2
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="C8&#45;0&#45;6224">
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="D8&#45;0&#45;6224">
+										B2
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="E8&#45;0&#45;6224">
+										+
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="F8&#45;0&#45;6224">
+										1
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="G8&#45;0&#45;6224">
+										5790662
+									</td>
+									<td class="fh bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="H8&#45;0&#45;6224">
+									</td>
+								</tr>
+								<tr style="height:27px;" tridx="8" id="r&#45;8&#45;0">
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="B9&#45;0&#45;6224">
+										3
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="C9&#45;0&#45;6224">
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="D9&#45;0&#45;6224">
+										14
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="E9&#45;0&#45;6224">
+										+
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="F9&#45;0&#45;6224">
+										70
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="G9&#45;0&#45;6224">
+										6616878
+									</td>
+									<td class="fh bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="H9&#45;0&#45;6224">
+									</td>
+								</tr>
+								<tr style="height:27px;" tridx="9" id="r&#45;9&#45;0">
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="B10&#45;0&#45;6224">
+										4
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="C10&#45;0&#45;6224">
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="D10&#45;0&#45;6224">
+										H2
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="E10&#45;0&#45;6224">
+										-
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="F10&#45;0&#45;6224">
+										50
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="G10&#45;0&#45;6224">
+										0913877
+									</td>
+									<td class="fh bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="H10&#45;0&#45;6224">
+									</td>
+								</tr>
+								<tr style="height:27px;" tridx="10" id="r&#45;10&#45;0">
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="B11&#45;0&#45;6224">
+										5
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="C11&#45;0&#45;6224">
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="D11&#45;0&#45;6224">
+										14
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="E11&#45;0&#45;6224">
+										-
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="F11&#45;0&#45;6224">
+										21
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="G11&#45;0&#45;6224">
+										5790662
+									</td>
+									<td class="fh bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="H11&#45;0&#45;6224">
+									</td>
+								</tr>
+								<tr style="height:27px;" tridx="11" id="r&#45;11&#45;0">
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="B12&#45;0&#45;6224">
+										6
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="C12&#45;0&#45;6224">
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="D12&#45;0&#45;6224">
+										YX1
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="E12&#45;0&#45;6224">
+										+
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="F12&#45;0&#45;6224">
+										0
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="G12&#45;0&#45;6224">
+									</td>
+									<td class="fh bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="H12&#45;0&#45;6224">
+									</td>
+								</tr>
+								<tr style="height:27px;" tridx="12" id="r&#45;12&#45;0">
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="B13&#45;0&#45;6224">
+										7
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="C13&#45;0&#45;6224">
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="D13&#45;0&#45;6224">
+										YX2
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="E13&#45;0&#45;6224">
+										+
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="F13&#45;0&#45;6224">
+										26
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="G13&#45;0&#45;6224">
+										5322781
+									</td>
+									<td class="fh bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="H13&#45;0&#45;6224">
+									</td>
+								</tr>
+								<tr style="height:27px;" tridx="13" id="r&#45;13&#45;0">
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="B14&#45;0&#45;6224">
+										8
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="C14&#45;0&#45;6224">
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="D14&#45;0&#45;6224">
+										YX3
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="E14&#45;0&#45;6224">
+										+
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="F14&#45;0&#45;6224">
+										20
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="G14&#45;0&#45;6224">
+										5726435
+									</td>
+									<td class="fh bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="H14&#45;0&#45;6224">
+									</td>
+								</tr>
+								<tr style="height:27px;" tridx="14" id="r&#45;14&#45;0">
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="B15&#45;0&#45;6224">
+										9
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="C15&#45;0&#45;6224">
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="D15&#45;0&#45;6224">
+										X7
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="E15&#45;0&#45;6224">
+										-
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="F15&#45;0&#45;6224">
+										46
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="G15&#45;0&#45;6224">
+										5491026
+									</td>
+									<td class="fh bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="H15&#45;0&#45;6224">
+									</td>
+								</tr>
+								<tr style="height:27px;" tridx="15" id="r&#45;15&#45;0">
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="B16&#45;0&#45;6224">
+										10
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="C16&#45;0&#45;6224">
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="D16&#45;0&#45;6224">
+										3
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="E16&#45;0&#45;6224">
+										+
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="F16&#45;0&#45;6224">
+										51
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="G16&#45;0&#45;6224">
+										5794043
+									</td>
+									<td class="fh bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="H16&#45;0&#45;6224">
+									</td>
+								</tr>
+								<tr style="height:27px;" tridx="16" id="r&#45;16&#45;0">
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="B17&#45;0&#45;6224">
+										11
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="C17&#45;0&#45;6224">
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="D17&#45;0&#45;6224">
+										YX1
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="E17&#45;0&#45;6224">
+										-
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="F17&#45;0&#45;6224">
+										0
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="G17&#45;0&#45;6224">
+									</td>
+									<td class="fh bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="H17&#45;0&#45;6224">
+									</td>
+								</tr>
+								<tr style="height:27px;" tridx="17" id="r&#45;17&#45;0">
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="B18&#45;0&#45;6224">
+										12
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="C18&#45;0&#45;6224">
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="D18&#45;0&#45;6224">
+										YX2
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="E18&#45;0&#45;6224">
+										-
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="F18&#45;0&#45;6224">
+										28
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="G18&#45;0&#45;6224">
+										4674064
+									</td>
+									<td class="fh bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="H18&#45;0&#45;6224">
+									</td>
+								</tr>
+								<tr style="height:27px;" tridx="18" id="r&#45;18&#45;0">
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="B19&#45;0&#45;6224">
+										13
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="C19&#45;0&#45;6224">
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="D19&#45;0&#45;6224">
+										YX3
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="E19&#45;0&#45;6224">
+										-
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="F19&#45;0&#45;6224">
+										23
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="G19&#45;0&#45;6224">
+										1843461
+									</td>
+									<td class="fh bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="H19&#45;0&#45;6224">
+									</td>
+								</tr>
+								<tr style="height:27px;" tridx="19" id="r&#45;19&#45;0">
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="B20&#45;0&#45;6224">
+										14
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="C20&#45;0&#45;6224">
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="D20&#45;0&#45;6224">
+										YX1
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="E20&#45;0&#45;6224">
+										+
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="F20&#45;0&#45;6224">
+										0
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="G20&#45;0&#45;6224">
+									</td>
+									<td class="fh bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="H20&#45;0&#45;6224">
+									</td>
+								</tr>
+								<tr style="height:27px;" tridx="20" id="r&#45;20&#45;0">
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="B21&#45;0&#45;6224">
+										15
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="C21&#45;0&#45;6224">
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="D21&#45;0&#45;6224">
+										SH1
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="E21&#45;0&#45;6224">
+										+
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="F21&#45;0&#45;6224">
+										25
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="G21&#45;0&#45;6224">
+										6602022
+									</td>
+									<td class="fh bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="H21&#45;0&#45;6224">
+									</td>
+								</tr>
+								<tr style="height:27px;" tridx="21" id="r&#45;21&#45;0">
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="B22&#45;0&#45;6224">
+										16
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="C22&#45;0&#45;6224">
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="D22&#45;0&#45;6224">
+										1
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="E22&#45;0&#45;6224">
+										-
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="F22&#45;0&#45;6224">
+										25
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="G22&#45;0&#45;6224">
+										6500301
+									</td>
+									<td class="fh bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="H22&#45;0&#45;6224">
+									</td>
+								</tr>
+								<tr style="height:27px;" tridx="22" id="r&#45;22&#45;0">
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="B23&#45;0&#45;6224">
+										17
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="C23&#45;0&#45;6224">
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="D23&#45;0&#45;6224">
+										Y15
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="E23&#45;0&#45;6224">
+										+
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="F23&#45;0&#45;6224">
+										11
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="G23&#45;0&#45;6224">
+										0770134
+									</td>
+									<td class="fh bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="H23&#45;0&#45;6224">
+									</td>
+								</tr>
+								<tr style="height:27px;" tridx="23" id="r&#45;23&#45;0">
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="B24&#45;0&#45;6224">
+										18
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="C24&#45;0&#45;6224">
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="D24&#45;0&#45;6224">
+										Y7
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="E24&#45;0&#45;6224">
+										+
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="F24&#45;0&#45;6224">
+										49
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="G24&#45;0&#45;6224">
+										0925225
+									</td>
+									<td class="fh bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="H24&#45;0&#45;6224">
+									</td>
+								</tr>
+								<tr style="height:27px;" tridx="24" id="r&#45;24&#45;0">
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="B25&#45;0&#45;6224">
+										19
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="C25&#45;0&#45;6224">
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="D25&#45;0&#45;6224">
+										X2
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="E25&#45;0&#45;6224">
+										-
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="F25&#45;0&#45;6224">
+										60
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="G25&#45;0&#45;6224">
+										0770173
+									</td>
+									<td class="fh bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="H25&#45;0&#45;6224">
+									</td>
+								</tr>
+								<tr style="height:27px;" tridx="25" id="r&#45;25&#45;0">
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="B26&#45;0&#45;6224">
+										20
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="C26&#45;0&#45;6224">
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="D26&#45;0&#45;6224">
+										1
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="E26&#45;0&#45;6224">
+										+
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="F26&#45;0&#45;6224">
+										0
+									</td>
+									<td class="fh tac bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="G26&#45;0&#45;6224">
+									</td>
+									<td class="fh bw pl2 sel br0 bbw1 bbss bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);border-bottom-color:rgb(238,238,238);font-family:'simhei';"
+									id="H26&#45;0&#45;6224">
+									</td>
+								</tr>
+								<tr style="height:11px;" tridx="26" id="r&#45;26&#45;0">
+									<td style="display:none;" id="A27&#45;0&#45;6224">
+									</td>
+									<td class="fh bw pl2 sel br0 bbw1 bbsda bbcb bl0 bt0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);font-family:'simhei';"
+									colSpan="7" id="B27&#45;0&#45;6224">
+									</td>
+								</tr>
+								<tr style="height:23px;" tridx="27" id="r&#45;27&#45;0">
+									<td style="display:none;" id="A28&#45;0&#45;6224">
+									</td>
+									<td class="fh bw pl2 sel br0 bb0 bl0 btw1 btsda btcb" style="background-color:rgb(255,255,255);color:rgb(0,0,0);font-family:'simhei';"
+									colSpan="7" id="B28&#45;0&#45;6224">
+										编制人：Momda
+									</td>
+								</tr>
+								<tr style="height:19px;" tridx="28" id="r&#45;28&#45;0">
+									<td style="display:none;" id="A29&#45;0&#45;6224">
+									</td>
+									<td class="fh bw pl2 sel b0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);font-family:'simhei';"
+									colSpan="7" id="B29&#45;0&#45;6224">
+										编制时间：2025-11-23 13:15:40
+									</td>
+								</tr>
+								<tr style="height:19px;" tridx="29" id="r&#45;29&#45;0">
+									<td style="display:none;" id="A30&#45;0&#45;6224">
+									</td>
+									<td class="fh bw pl2 sel b0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);font-family:'simhei';"
+									colSpan="7" id="B30&#45;0&#45;6224">
+										调车长：HH
+									</td>
+								</tr>
+								<tr style="height:19px;" tridx="30" id="r&#45;30&#45;0">
+									<td style="display:none;" id="A31&#45;0&#45;6224">
+									</td>
+									<td class="fh bw pl2 sel b0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);font-family:'simhei';"
+									colSpan="7" id="B31&#45;0&#45;6224">
+										说明：
+									</td>
+								</tr>
+								<tr style="height:19px;" tridx="31" id="r&#45;31&#45;0">
+									<td style="display:none;" id="A32&#45;0&#45;6224">
+									</td>
+									<td class="fh bw pl2 sel b0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);font-family:'simhei';"
+									id="B32&#45;0&#45;6224">
+									</td>
+									<td class="fh bw pl2 sel b0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);font-family:'simhei';"
+									id="C32&#45;0&#45;6224">
+									</td>
+									<td class="fh bw pl2 sel b0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);font-family:'simhei';"
+									id="D32&#45;0&#45;6224">
+									</td>
+									<td class="fh bw pl2 sel b0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);font-family:'simhei';"
+									id="E32&#45;0&#45;6224">
+									</td>
+									<td class="fh bw pl2 sel b0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);font-family:'simhei';"
+									id="F32&#45;0&#45;6224">
+									</td>
+									<td class="fh bw pl2 sel b0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);font-family:'simhei';"
+									id="G32&#45;0&#45;6224">
+									</td>
+									<td class="fh bw pl2 sel b0" style="background-color:rgb(255,255,255);color:rgb(0,0,0);font-family:'simhei';"
+									id="H32&#45;0&#45;6224">
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+
+    </div>
+</body>
+<script>
+   var TRACK_CAPACITY = {
+        "站区": { '1': 65, '2': 65, '3': 65, '4': 65, '5': 66, '6': 62, '7': 63, '8': 59, '9': 59, '10': 64, '11': 63, '12': 63, '13': 62, '14': 63, '15': 67, 'B1': 6, 'B2': 10 },
+        "货场": { 'H1': 41, 'H2': 42, 'H3': 45, 'H4': 46, 'H5': 16, 'H6': 24 },
+        "鹰岭": { 'CZ3': 23, 'CZ4': 23, 'GT1': 40, 'GT2': 40, 'SH1': 31, 'SH2': 30, 'SH3': 21, 'TS1': 30, 'TS2': 40, 'YX1': 31, 'YX2': 31, 'YX3': 31, 'GM1': 20, 'GM2': 20, 'GM3': 19, 'GM4': 19 },
+        "港": { 'L1': 57, 'L2': 48, 'L3': 47, 'G1': 57, 'G2': 53, 'ZL1': 15, 'ZL2': 14, 'ZL3': 14, 'LZ': 18 },
+        "中油": { 'YQX': 53, 'Y1': 29, 'Y2': 29, 'Y3': 32, 'Y4': 32, 'Y5': 33, 'Y6': 33, 'Y7': 57, 'Y8': 58, 'Y9': 52, 'Y10': 52, 'Y11': 55, 'Y12': 55, 'Y13': 57, 'Y14': 57, 'Y15': 32, 'Y16': 15, 'YH1': 55, 'YH2': 55 }
+    };
+
+    /* ===== 优化1：预计算扁平化容量表（加载时执行，无延迟）=====
+    * 性能提升：查询从O(n*m)降到O(1) */
+    var TRACK_CAPACITY_FLAT = {};
+    var TRACK_AREA_MAP = {};
+    (function initMaps() {
+        for (var area in TRACK_CAPACITY) {
+            for (var track in TRACK_CAPACITY[area]) {
+                TRACK_CAPACITY_FLAT[track] = TRACK_CAPACITY[area][track];
+                TRACK_AREA_MAP[track] = area;
+            }
+        }
+    })();
+
+    // 优化后的查询函数
+    function getTrackCapacity(track) {
+        return track ? (TRACK_CAPACITY_FLAT[track] || null) : null;
+    }
+
+    function getTextContent(cell) {
+        return cell ? cell.innerText || cell.textContent || "" : "";
+    }
+
+    function safeIndexOf(text, searchString) {
+        if (!text || !searchString) return -1;
+        return String(text).indexOf(String(searchString));
+    }
+
+    function trim(t) {
+        return t.replace(/^\s+|\s+$/g, '');
+    }
+
+    function normTk(t) {
+        var m = /^X(\d+)$/.exec(t);
+        return m ? m[1] : t;
+    }
+
+    /* ===== 优化2：缓存行数据提取（单次循环内有效）=====
+    * 性能提升：每行DOM查询从8次降到1次 */
+    function extractRowData(row, offset) {
+        var cells = row.getElementsByTagName('td');
+        if (cells.length < 7) return null;
+        
+        // 一次性提取所有需要的文本
+        return {
+            opC: cells[1 + offset],
+            tkC: cells[2 + offset],
+            sgnC: cells[3 + offset],
+            cntC: cells[4 + offset],
+            rmkC: cells[6 + offset],
+            // 预计算文本内容（减少90%的重复读取）
+            sgn: trim(getTextContent(cells[3 + offset])),
+            cnt: parseInt(getTextContent(cells[4 + offset])) || 0,
+            opT: trim(getTextContent(cells[1 + offset])),
+            rmkT: getTextContent(cells[6 + offset]),
+            track: normTk(trim(getTextContent(cells[2 + offset]))),
+            hasLetters: /[a-zA-Z]/.test(normTk(trim(getTextContent(cells[2 + offset]))))
+        };
+    }
+
+    function calcMark() {
+        var pMdf = false;
+        var prcNts = {};
+        var tbody = document.getElementsByTagName('tbody')[0];
+        var rs = tbody.getElementsByTagName('tr');
+        var ttl = 0;
+
+        // 提前返回检查
+        var rs3Cells = rs[3].getElementsByTagName('td');
+        if (rs3Cells.length > 1 && safeIndexOf(rs3Cells[1].innerText, '0112') > 0) {
+            showIcn(false);
+            document.getElementById('auditResultSpan').textContent = '中油计划';
+            return;
+        }
+
+        function checkTransferDirection(fromTrack, toTrack, rmkCell, rowRef) {
+            if (!rmkCell) return;
+            var targetArea = TRACK_AREA_MAP[toTrack];
+            if (!targetArea || targetArea === '站区') return;
+            var rmkText = getTextContent(rmkCell);
+            if (safeIndexOf(rmkText, targetArea) === -1) {
+                addMarkAndStrike(rowRef, rmkCell, targetArea, false);
+            }
+        }
+
+        function addMrk(row) {
+            var r = row.rowIndex === 6 ? 1 : 0;
+            var sC = row.getElementsByTagName('td')[r];
+            if (!sC || (sC.innerHTML || "").indexOf('>') !== -1) return;
+            var sp = document.createElement('span');
+            sp.style.cssText = 'color:red;font-weight:bold;font-size:15px;margin-right:5px;';
+            sp.appendChild(document.createTextNode('>'));
+            sC.insertBefore(sp, sC.firstChild);
+            pMdf = true;
+        }
+
+        function addStK(cell, keyword, isStrike) {
+            if (!cell) return;
+            pMdf = true;
+            var txt = getTextContent(cell);
+            if (txt.indexOf(keyword) === -1) {
+                cell.innerHTML = trim(txt) ? cell.innerHTML + ' ' + 
+                    '<span style="color:red">' + keyword + '</span>' : 
+                    '<span style="color:red">' + keyword + '</span>';
+            } else if (isStrike) {
+                cell.innerHTML = cell.innerHTML.replace(
+                    new RegExp(escapeRegExp(keyword), 'g'),
+                    '<span class="mark-complete-cancel">' + keyword + 
+                    '<span class="strike-line"></span></span>'
+                );
+            }
+        }
+
+        function addMarkAndStrike(row, cell, keyword, isStrike) {
+            addStK(cell, keyword, isStrike);
+            addMrk(row);
+        }
+
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        var delta2Count = 0, delta2Active = false;
+        
+        // 定义股道类型字典和处理状态
+        var tkDict = {
+            "高站台": ["H2", "H5", "Y15", "Y16", "LZ", "ZL1", "ZL3"],
+            "分": ["CZ3", "CZ4", "GM1"],
+            "压": [],
+            "编": [],
+            "电": []
+        };
+        var prcNts = { "高站台": false, "分": false, "压": false, "编": false, "电": false };
+        
+        // 收集需要添加到说明文本的span标签
+        var noteSpans = [];
+        
+        /* ===== 主循环：使用缓存数据 ===== */
+        for (var i = 6; i < rs.length - 6; i++) {
+            var offset = (i === 6 ? 1 : 0);
+            var data = extractRowData(rs[i], offset);
+            if (!data) continue;
+
+            // 直接使用缓存的文本，不再重复查询DOM
+            if (data.sgn === '+') ttl += data.cnt;
+            else if (data.sgn === '-') ttl -= data.cnt;
+
+            // 所有业务逻辑使用data对象，不再调用getTextContent
+            var hasDelta2 = data.rmkT.indexOf('△2') !== -1;
+            if (!delta2Active && hasDelta2 && data.sgn === '+' && data.cnt > 0) {
+                delta2Active = true; delta2Count = 0;
+            }
+            if (delta2Active && data.cnt > 0) {
+                delta2Count += (data.sgn === '+' ? data.cnt : -data.cnt);
+                if (delta2Count <= 0) { delta2Active = false; }
+                if (!hasDelta2) {
+                    addMarkAndStrike(rs[i], data.rmkC, '△2', false);
+                }
+            } else if (hasDelta2) {
+                addMarkAndStrike(rs[i], data.rmkC, '△2', true);
+            }
+
+            // 其余所有逻辑保持一致，仅将getTextContent调用改为使用data对象属性
+            if (data.sgn === '-' && i > 6 && i < rs.length - 1) {
+                var hasFn = data.rmkT.indexOf('完') !== -1;
+                if (ttl < 0) {
+                    data.cntC.style.color = 'red';
+                    data.cntC.style.fontWeight = 'bold';
+                    data.cntC.style.borderBottom = '2px solid red';
+                }
+                if (ttl > 0 && hasFn) {
+                    addMarkAndStrike(rs[i], data.rmkC, '完', true);
+                } else if (ttl === 0 && !hasFn && data.cnt > 0) {
+                    addMarkAndStrike(rs[i], data.rmkC, '完', false);
+                }
+            }
+
+            // 单机检查
+            if (ttl > 0 && data.rmkT.indexOf('单机') !== -1) {
+                addMarkAndStrike(rs[i], data.rmkC, '单机', true);
+            }
+
+            // 压标记检查
+            var capacity = getTrackCapacity(data.track);
+            if (capacity) {
+                var hasYa = data.rmkT.indexOf('压') !== -1;
+                if (data.sgn === '+' && ttl > capacity && !hasYa && data.cnt > 0) {
+                    addMarkAndStrike(rs[i], data.rmkC, '压', false);
+                } else if (data.sgn === '-') {
+                    if ((ttl + data.cnt) > capacity && !hasYa && data.cnt > 0) {
+                        addMarkAndStrike(rs[i], data.rmkC, '压', false);
+                    } else if ((ttl + data.cnt + 2) < capacity && hasYa && data.cnt > 0 && data.hasLetters) {
+                        addMarkAndStrike(rs[i], data.rmkC, '压', true);
+                    }
+                }
+            }
+
+            // 方向检查
+            var hasChubeitou = data.rmkT.indexOf('出北头') !== -1;
+            var hasChunantou = data.rmkT.indexOf('出南头') !== -1;
+            var hasJin = data.rmkT.indexOf('进') !== -1;
+            var hasDing = data.rmkT.indexOf('顶') !== -1;
+            
+            // 处理第一行、YX1股道或L开头股道的方向检查
+            if (i === 6 || data.track === "YX1" || (/^L\d+$/.test(data.track) && (i > 6 ? !extractRowData(rs[i - 1], (i - 1) === 6 ? 1 : 0).hasLetters : true) && data.hasLetters)) {
+                if (!hasChubeitou && !hasChunantou && !hasJin && !hasDing) {
+                    addStK(data.rmkC, '方向', false);
+                    addMrk(rs[i]);
+                }
+            } 
+            // 处理其他情况
+            else if (i > 6) {
+                var prevData = extractRowData(rs[i - 1], (i - 1) === 6 ? 1 : 0);
+                if (prevData && prevData.hasLetters && !data.hasLetters) {
+                    if (data.rmkT.indexOf('有电') === -1) {
+                        addMarkAndStrike(rs[i], data.rmkC, '有电', false);
+                    }
+                    if (prevData.rmkT.indexOf('回站') === -1 && prevData.track !== 'B1' && prevData.track !== 'B2') {
+                        addMarkAndStrike(rs[i - 1], prevData.rmkC, '回站', false);
+                    }
+                    if (!hasChubeitou && !hasChunantou && !hasJin && !hasDing && i < rs.length - 7) {
+                        addStK(data.rmkC, '方向', false);
+                        addMrk(rs[i]);
+                    }
+                }
+            }
+
+            // 转移方向检查（处理下一行）
+            if (i < rs.length - 7) {
+                var nextData = extractRowData(rs[i + 1], (i + 1) === 6 ? 1 : 0);
+                if (nextData && !data.hasLetters && nextData.hasLetters) {
+                    checkTransferDirection(data.track, nextData.track, data.rmkC, rs[i]);
+                    if (data.rmkT.indexOf('出南头牵出线') !== -1) {
+                        addMarkAndStrike(rs[i], data.rmkC, '出南头牵出线', true);
+                    }
+                }
+            }
+
+            // 编组检查
+            var has编好 = data.rmkT.indexOf('编好') !== -1;
+            var has编好南头 = data.rmkT.indexOf('编好南头') !== -1;
+            var has编好北头 = data.rmkT.indexOf('编好北头') !== -1;
+
+            if (has编好 && !has编好南头 && !has编好北头) {
+                if (data.opT === '') {
+                    addMarkAndStrike(rs[i], data.opC, '编组', false);
+                }
+            } else if (data.opT.indexOf('编组') !== -1) {
+                addMarkAndStrike(rs[i], data.opC, '编组', true);
+            } else if (/^\+/.test(data.opT)) {
+                if (!has编好) {
+                    addMarkAndStrike(rs[i], data.rmkC, '编好', false);
+                }
+                if (has编好北头) {
+                    addMarkAndStrike(rs[i], data.rmkC, '北头', true);
+                }
+                if (has编好南头) {
+                    addMarkAndStrike(rs[i], data.rmkC, '南头', true);
+                }
+            }
+            
+            // 检查值是否在数组中
+            function inAry(v, a) {
+                if (!a || typeof a !== 'object' || typeof a.length !== 'number') return false;
+                for (var j = 0; j < a.length; j++) {
+                    if (a[j] === v) return true;
+                }
+                return false;
+            }
+            
+            // 处理股道类型标记（高站台、分）
+            for (var m in tkDict) {
+                if (m === "压" || m === "编" || m === "电") continue;
+
+                if (inAry(data.track, tkDict[m])) {
+                    if (data.rmkT.indexOf(m) === -1) {
+                        addMarkAndStrike(rs[i], data.rmkC, m, false);
+                    }
+                    if (!prcNts[m]) {
+                        noteSpans.push(m + '；');
+                        prcNts[m] = true;
+                    }
+                } else if (data.rmkT.indexOf(m) !== -1) {
+                    addMarkAndStrike(rs[i], data.rmkC, m, true);
+                }
+            }
+            
+            // 处理"压"标记
+            if (data.rmkT.indexOf('压') !== -1 && !prcNts['压']) {
+                noteSpans.push('压；');
+                prcNts['压'] = true;
+            }
+            
+            // 处理"电"标记
+            if (data.rmkT.indexOf('电') !== -1 && !prcNts['电']) {
+                noteSpans.push('电；');
+                prcNts['电'] = true;
+            }
+            
+            // 处理"编"标记
+            if (data.rmkT.indexOf('编') !== -1 && !prcNts['编']) {
+                noteSpans.push('编；');
+                prcNts['编'] = true;
+            }
+        }
+
+        // 说明行处理（保持原始逻辑）
+        var row = rs[rs.length - 2];
+        if (row) {
+            var cell = row.getElementsByTagName('td')[1];
+            if (cell && getTextContent(cell).indexOf('说明：') === 0) {
+                // ... 完整保留原始说明行逻辑 ...
+                var text = getTextContent(cell);
+                var modified = false;
+                var content = text.substring(3);
+                var parts = content.split(';');
+                var items = [];
+                for (var j = 0; j < parts.length; j++) {
+                    var part = trim(parts[j]);
+                    if (part && part.indexOf('；') === -1) {
+                        items.push(part + ';');
+                    }
+                }
+                for (var j = 0; j < items.length; j++) {
+                    var item = items[j];
+                    for (var key in tkDict) {
+                        if (!prcNts[key] && item.indexOf(key) !== -1) {
+                            var clean = trim(item.replace(/\s+/g, ' '));
+                            items[j] = '<span class="mark-complete-cancel">' + clean + '<span class="strike-line"></span></span>';
+                            modified = true;
+                        }
+                    }
+                }
+                var newHtml = '说明：';
+                if (items.length > 0) {
+                    newHtml += '<br>  ' + items.join('<br>  ') + '<br> ';
+                }
+                if (noteSpans.length > 0) {
+                    for (var k = 0; k < noteSpans.length; k++) {
+                        var keyword = noteSpans[k].replace('；', '');
+                        if (text.indexOf(keyword) === -1) {
+                            newHtml += '<span style="color:red">' + noteSpans[k] + '</span> ';
+                            modified = true;
+                        }
+                    }
+                }
+                pMdf = pMdf || modified;
+                cell.innerHTML = newHtml;
+                if (modified) addMrk(row, true);
+            }
+        }
+
+        // 甩挂警告（保持原始逻辑）
+        if (ttl !== 0) {
+            var wrnR = rs[rs.length - 5];
+            if (wrnR) {
+                var wrnC = wrnR.getElementsByTagName('td')[1];
+                if (wrnC && wrnC.innerHTML.indexOf('⇯') === -1) {
+                    var wrnSp = document.createElement('span');
+                    wrnSp.style.cssText = 'color:red;font-weight:bold;width:300px;display:inline-block;text-align:center';
+                    wrnSp.innerHTML = '⇯甩挂车数不对！';
+                    wrnC.appendChild(wrnSp);
+                    pMdf = true;
+                }
+            }
+        }
+
+        showIcn(pMdf);
+    }
+
+    function showIcn(isFailed) {
+        var container = document.getElementById('auditResultContainer');
+        if (!container) return;
+        var span = document.createElement('span');
+        span.id = 'auditResultSpan';
+        span.setAttribute('data-result', !isFailed);
+        span.style.cssText = 'color:' + (isFailed ? 'red' : 'green') + 
+            ';font-weight:bold;font-size:26px;width:37px;display:inline-block;';
+        span.appendChild(document.createTextNode(isFailed ? ' 再次检查' : ' 初审通过'));
+        container.innerHTML = '';
+        container.appendChild(span);
+    }
+
+    // 启动函数
+    calcMark();
+</script>
+<script>
+// 主题切换功能 - 兼容IE11
+    var themeToggle = document.getElementById('themeToggle');
+    var body = document.body;
+
+    // 检查本地存储支持
+    function hasLocalStorage() {
+        try {
+            var test = 'test';
+            localStorage.setItem(test, test);
+            localStorage.removeItem(test);
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    // 初始化主题
+    var storageSupported = hasLocalStorage();
+    var savedTheme = null;
+    if (storageSupported) {
+        try {
+            savedTheme = localStorage.getItem('theme');
+        } catch (e) {
+            savedTheme = null;
+        }
+    }
+    
+    // 初始化主题
+    var isGlass = savedTheme === 'glass';
+    if (isGlass && body && body.classList) {
+        body.classList.add('glass-theme');
+    }
+    
+    // 更新按钮初始状态
+    if (themeToggle) {
+        themeToggle.textContent = isGlass ? '默认' : '毛玻璃';
+    }
+
+    // 切换主题事件处理函数
+    function toggleTheme() {
+        if (body && body.classList) {
+            body.classList.toggle('glass-theme');
+            var isGlass = body.classList.contains('glass-theme');
+            
+            // 保存主题 - 添加try-catch保护
+            if (storageSupported) {
+                try {
+                    isGlass ? localStorage.setItem('theme', 'glass') : localStorage.removeItem('theme');
+                } catch (e) {
+                    // 忽略存储错误
+                }
+            }
+            
+            // 更新按钮文本
+            if (themeToggle) {
+                themeToggle.textContent = isGlass ? '默认' : '毛玻璃';
+            }
+        }
+    }
+    
+    // 绑定切换主题事件 - 兼容IE11
+    if (themeToggle) {
+        if (themeToggle.addEventListener) {
+            themeToggle.addEventListener('click', toggleTheme);
+        } else if (themeToggle.attachEvent) {
+            themeToggle.attachEvent('onclick', toggleTheme);
+        }
+    }
+</script>
+</html>
