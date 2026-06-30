@@ -73,8 +73,18 @@ async function sendToContent(tabId, action, args) {
     const response = await chrome.tabs.sendMessage(tabId, { action, args });
     return response;
   } catch (e) {
-    // content script 可能未注入或 tab 已关闭
-    return null;
+    // content script 可能未注入（如 file:// 页面），尝试动态注入
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId },
+        files: ['scripts/content.js']
+      });
+      // 注入后重试
+      const response = await chrome.tabs.sendMessage(tabId, { action, args });
+      return response;
+    } catch (e2) {
+      return null;
+    }
   }
 }
 
