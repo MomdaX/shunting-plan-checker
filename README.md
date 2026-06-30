@@ -22,15 +22,22 @@
 ## 项目结构
 
 ```
-├── manifest.json       # 扩展配置
-├── background.js       # Service Worker（监测核心）
-├── content.js          # 页面注入脚本（表格检查引擎）
-├── main.js             # Popup 交互逻辑
-├── index.html          # Popup 界面
-├── style.css           # Popup 样式
-├── icon-active.png     # 激活图标
-├── icon-inactive.png   # 非激活图标
-└── generate-icons.js   # 图标生成脚本
+├── manifest.json        # 扩展配置
+├── icons/
+│   ├── icon-active.png
+│   └── icon-inactive.png
+├── popup/
+│   ├── index.html       # Popup 界面
+│   ├── main.js          # Popup 交互逻辑
+│   └── style.css        # Popup 样式
+├── scripts/
+│   ├── background.js    # Service Worker（监测核心）
+│   ├── content.js       # 页面注入脚本（表格检查引擎）
+│   └── generate-icons.js
+├── src/                 # 测试数据
+│   ├── A001.html ~ A005.html
+│   ├── browser.html
+│   └── ...
 ```
 
 ## 使用说明

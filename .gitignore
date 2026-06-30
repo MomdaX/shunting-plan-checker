@@ -1,12 +1,12 @@
 # 测试数据文件（体积大）
-/A001.html
-/A002.html
-/A003.html
-/A004.html
-/A005.html
-/browser.html
-/调车计划_VBA.html
-/检查调车计划浏览器版_20251213.js
+/src/A001.html
+/src/A002.html
+/src/A003.html
+/src/A004.html
+/src/A005.html
+/src/browser.html
+/src/调车计划_VBA.html
+/src/检查调车计划浏览器版_20251213.js
 
 # IDE
 .idea/

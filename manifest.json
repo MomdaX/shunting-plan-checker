@@ -5,14 +5,14 @@
   "description": "Auto-check shunting work notice",
   "permissions": ["activeTab", "scripting", "storage", "alarms", "tabs"],
   "action": {
-    "default_popup": "index.html",
+    "default_popup": "popup/index.html",
     "default_icon": {
-      "128": "icon-inactive.png"
+      "128": "icons/icon-inactive.png"
     }
   },
   "icons": {
-    "128": "icon-active.png"
+    "128": "icons/icon-active.png"
   },
-  "content_scripts": [{"matches": ["<all_urls>"], "js": ["content.js"], "run_at": "document_idle"}],
-  "background": {"service_worker": "background.js"}
+  "content_scripts": [{"matches": ["<all_urls>"], "js": ["scripts/content.js"], "run_at": "document_idle"}],
+  "background": {"service_worker": "scripts/background.js"}
 }
