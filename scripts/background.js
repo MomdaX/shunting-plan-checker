@@ -320,6 +320,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         break;
       }
 
+      case 'clearLogs': {
+        const state = await loadState() || {};
+        state.logs = [];
+        await saveState(state);
+        sendResponse({ success: true });
+        break;
+      }
+
       default:
         sendResponse({ success: false, error: 'Unknown action' });
     }

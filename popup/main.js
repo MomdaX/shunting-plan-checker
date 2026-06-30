@@ -1,6 +1,7 @@
 // DOM 元素
 const checkBtn = document.getElementById('checkBtn');
 const logContent = document.getElementById('logContent');
+const clearLogBtn = document.getElementById('clearLogBtn');
 const monitorSwitch = document.getElementById('monitorSwitch');
 const iframeSection = document.getElementById('iframeSection');
 const iframeList = document.getElementById('iframeList');
@@ -146,6 +147,14 @@ checkBtn.addEventListener('click', async () => {
     checkBtn.disabled = false;
     setTimeout(refreshStatus, 300);
   }
+});
+
+// 清空日志
+clearLogBtn.addEventListener('click', async () => {
+  try {
+    await chrome.runtime.sendMessage({ action: 'clearLogs' });
+    logContent.innerHTML = '';
+  } catch (e) {}
 });
 
 // 监听 storage 变化，实时更新 UI
